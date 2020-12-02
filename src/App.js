@@ -1,10 +1,12 @@
 import React from 'react';
+import data from './data.js';
 
 class App extends React.Component {
   state = {
     serving: '',
     ingredientName: '',
     ingredientAmount: '',
+    original: {},
     result: {},
   };
 
@@ -40,23 +42,26 @@ class App extends React.Component {
     result.title = body.title;
     result.servings = Math.floor(body.servings * multiplier)
       ? Math.floor(body.servings * multiplier)
-      : 1;
+      : serving === ''
+      ? 1
+      : 0;
     result.ingredients = [];
     body.ingredients.forEach((ingredient, id) => {
+      let temp = { ...ingredient };
       if (ingredient.unit === 'piece') {
-        ingredient.amount = Math.ceil(ingredient.amount * multiplier);
+        temp.amount = Math.ceil(ingredient.amount * multiplier);
       } else {
-        ingredient.amount =
-          Math.round(ingredient.amount * multiplier * 100) / 100;
+        temp.amount = Math.round(ingredient.amount * multiplier * 100) / 100;
       }
-      result.ingredients.push(ingredient);
+      result.ingredients.push(temp);
     });
-    this.setState({ result });
+    this.setState({ result, original: body });
+    return;
   };
 
   render() {
     return (
-      <div className="App">
+      <div className="App" style={{ padding: '10px' }}>
         <div style={{ display: 'flex', flexDirection: 'row' }}>
           <div
             style={{
@@ -126,47 +131,7 @@ class App extends React.Component {
               <option value="" disabled selected>
                 Select ingredient
               </option>
-              {{
-                title: 'Pancake',
-                servings: 4,
-                ingredients: [
-                  {
-                    name: 'fluor',
-                    amount: 20,
-                    unit: 'dkg',
-                  },
-                  {
-                    name: 'egg',
-                    amount: 2,
-                    unit: 'piece',
-                  },
-                  {
-                    name: 'milk',
-                    amount: 3,
-                    unit: 'dl',
-                  },
-                  {
-                    name: 'carbonated mineral water',
-                    amount: 2,
-                    unit: 'dl',
-                  },
-                  {
-                    name: 'salt',
-                    amount: 1,
-                    unit: 'pinch',
-                  },
-                  {
-                    name: 'oil',
-                    amount: 0.75,
-                    unit: 'dl',
-                  },
-                  {
-                    name: 'oil for cooking',
-                    amount: 1,
-                    unit: 'dl',
-                  },
-                ],
-              }.ingredients.map((ing, id) => {
+              {data.ingredients.map((ing, id) => {
                 return <option value={ing.name}>{ing.name}</option>;
               })}
             </select>
@@ -193,58 +158,38 @@ class App extends React.Component {
           </div>
         </div>
         <button
-          onClick={() => {
+          onClick={() =>
             this.recalculateIngredients(
-              {
-                title: 'Pancake',
-                servings: 4,
-                ingredients: [
-                  {
-                    name: 'fluor',
-                    amount: 20,
-                    unit: 'dkg',
-                  },
-                  {
-                    name: 'egg',
-                    amount: 2,
-                    unit: 'piece',
-                  },
-                  {
-                    name: 'milk',
-                    amount: 3,
-                    unit: 'dl',
-                  },
-                  {
-                    name: 'carbonated mineral water',
-                    amount: 2,
-                    unit: 'dl',
-                  },
-                  {
-                    name: 'salt',
-                    amount: 1,
-                    unit: 'pinch',
-                  },
-                  {
-                    name: 'oil',
-                    amount: 0.75,
-                    unit: 'dl',
-                  },
-                  {
-                    name: 'oil for cooking',
-                    amount: 1,
-                    unit: 'dl',
-                  },
-                ],
-              },
+              data,
               this.state.serving,
               this.state.ingredientName,
               this.state.ingredientAmount
-            );
-          }}
+            )
+          }
         >
           Recalculate ingredients
         </button>
-        <pre>{JSON.stringify(this.state.result, null, 2)}</pre>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            width: '100%',
+            marginTop: '20px',
+            fontSize: '12px',
+            fontWeight: 'bold',
+          }}
+        >
+          <div style={{ flex: 1 }}>
+            <div style={{ color: 'gray' }}>Original</div>
+            <pre style={{ fontWeight: 'normal', color: 'gray' }}>
+              {JSON.stringify(this.state.original, null, 2)}
+            </pre>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div>Generated</div>
+            <pre>{JSON.stringify(this.state.result, null, 2)}</pre>
+          </div>
+        </div>
       </div>
     );
   }
